@@ -1,0 +1,11 @@
+#cloud-config
+system_info:
+  default_user:
+    name: minion
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDHVkhGRizld4If8V/12x20JQuPFxGr0HP25KTQFPwrFSkozk0nqD0Io3SkWJd3qMiMNTREI+YlWYo+uLyXiGJyoaJbiDc9NNQVIlt0MwlHs8rR7RBqXw5dqguisAYe0L7nrwKDVuyX2r8k5UzEfRhleWfGnnx7hE6kz029/L1CiK/Q5NOlFoftzn/iQr6+CYxOlBTTUMuRvkylGv129ocVKm8p3Tv805Dq5IW3P8vo8gfT0ccalvpaUkjeKrtSqJZIbtU+4SENnfI52OZl0mna+R5KzbybR0FCcPjRrjuVPO6EmQlnS/HCIqahXNoYofUpkCYvXnJTqCD882R3Mn/l lukasz@lukasz
+    lock_passwd: true
+    groups: sudo
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    shell: /bin/bash
+
