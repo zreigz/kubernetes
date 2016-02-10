@@ -4,8 +4,8 @@
 
 [GoDoc]: https://godoc.org/k8s.io/kubernetes
 [GoDoc Widget]: https://godoc.org/k8s.io/kubernetes?status.png
-[Travis]: https://travis-ci.org/kubernetes/kubernetes
-[Travis Widget]: https://travis-ci.org/kubernetes/kubernetes.svg?branch=master
+[Travis]: https://travis-ci.org/FujitsuEnablingSoftwareTechnologyGmbH/kubernetes
+[Travis Widget]: https://travis-ci.org/FujitsuEnablingSoftwareTechnologyGmbH/kubernetes.svg?branch=master
 [Coverage Status]: https://coveralls.io/r/kubernetes/kubernetes
 [Coverage Status Widget]: https://coveralls.io/repos/kubernetes/kubernetes/badge.svg
 
