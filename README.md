@@ -9,6 +9,12 @@
 [Coverage Status]: https://coveralls.io/r/kubernetes/kubernetes
 [Coverage Status Widget]: https://coveralls.io/repos/kubernetes/kubernetes/badge.svg
 
+## Contents
+
+This branch contains
+* Heat provider
+* Dashboard 
+
 ### Are you ...
   * Interested in learning more about using Kubernetes?  Please see our user-facing documentation on [kubernetes.io](http://kubernetes.io)
   * Interested in hacking on the core Kubernetes code base?  Keep reading!
