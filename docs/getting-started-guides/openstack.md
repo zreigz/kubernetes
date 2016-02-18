@@ -52,12 +52,12 @@ Running Kubernetes with Openstack is an easy way to create Kubernetes cluster on
     nova >= 3.2.0
 
     ```
-    sudo apt-get remove python-hetaclient
+    sudo apt-get remove python-heatclient
     sudo apt-get remove python-swiftclient
     sudo apt-get remove python-glanceclient
     sudo apt-get remove python-novaclient
 
-    sudo pip install -U --force python-hetaclient
+    sudo pip install -U --force python-heatclient
     sudo pip install -U --force python-swiftclient
     sudo pip install -U --force python-glanceclient
     sudo pip install -U --force python-novaclient
@@ -106,7 +106,7 @@ You can manage the nodes in your cluster with the Openstack WEB UI like Horizon 
 To get all necessary information about cluster execute commands in main kubernetes directory:
 
 ```
-. cluster/openstack/openrc-default.sh
+. cluster/openstack/config-default.sh
 . cluster/openstack/openrc-default.sh
 heat stack-show $STACK_NAME
 ```
