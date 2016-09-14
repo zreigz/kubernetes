@@ -171,9 +171,10 @@ func (ComponentStatusList) SwaggerDoc() map[string]string {
 }
 
 var map_ConfigMap = map[string]string{
-	"":         "ConfigMap holds configuration data for pods to consume.",
-	"metadata": "Standard object's metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
-	"data":     "Data contains the configuration data. Each key must be a valid DNS_SUBDOMAIN with an optional leading dot.",
+	"":           "ConfigMap holds configuration data for pods to consume.",
+	"metadata":   "Standard object's metadata. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#metadata",
+	"data":       "Data contains the configuration data. Each key must be a valid DNS_SUBDOMAIN with an optional leading dot.",
+	"binarydata": "Data contains the binary data. Each key must be a valid DNS_SUBDOMAIN with an optional leading dot.",
 }
 
 func (ConfigMap) SwaggerDoc() map[string]string {

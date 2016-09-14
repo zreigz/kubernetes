@@ -36,6 +36,7 @@ func ProbeVolumePlugins() []volume.VolumePlugin {
 
 const (
 	configMapPluginName = "kubernetes.io/configmap"
+	configMapBinaryContent = "<?config-map-data encoding='base64'?>"
 )
 
 // configMapPlugin implements the VolumePlugin interface.
@@ -207,7 +208,7 @@ func makePayload(mappings []api.KeyToPath, configMap *api.ConfigMap, defaultMode
 		return nil, fmt.Errorf("No defaultMode used, not even the default value for it")
 	}
 
-	payload := make(map[string]volumeutil.FileProjection, len(configMap.Data))
+	payload := make(map[string]volumeutil.FileProjection, (len(configMap.Data) + len(configMap.BinaryData)))
 	var fileProjection volumeutil.FileProjection
 
 	if len(mappings) == 0 {
@@ -216,16 +217,28 @@ func makePayload(mappings []api.KeyToPath, configMap *api.ConfigMap, defaultMode
 			fileProjection.Mode = *defaultMode
 			payload[name] = fileProjection
 		}
+		for name, data := range configMap.BinaryData {
+			fileProjection.Data = data
+			fileProjection.Mode = *defaultMode
+			payload[name] = fileProjection
+		}
 	} else {
 		for _, ktp := range mappings {
-			content, ok := configMap.Data[ktp.Key]
-			if !ok {
+			contentData, okData := configMap.Data[ktp.Key]
+			contentBinaryData, okBinaryData := configMap.BinaryData[ktp.Key]
+			if (!okData && !okBinaryData) {
 				err_msg := "references non-existent config key"
 				glog.Errorf(err_msg)
 				return nil, fmt.Errorf(err_msg)
 			}
 
-			fileProjection.Data = []byte(content)
+			if okData {
+				fileProjection.Data = []byte(contentData)
+			} else {
+
+				fileProjection.Data = contentBinaryData
+			}
+
 			if ktp.Mode != nil {
 				fileProjection.Mode = *ktp.Mode
 			} else {

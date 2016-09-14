@@ -23,6 +23,7 @@ import (
 	"path"
 	"strings"
 
+	binutil "k8s.io/kubernetes/pkg/util/binarycontent"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/runtime"
 	"k8s.io/kubernetes/pkg/util/validation"
@@ -103,6 +104,7 @@ func (s ConfigMapGeneratorV1) StructuredGenerate() (runtime.Object, error) {
 	configMap := &api.ConfigMap{}
 	configMap.Name = s.Name
 	configMap.Data = map[string]string{}
+	configMap.BinaryData = map[string][]byte{}
 	if len(s.FileSources) > 0 {
 		if err := handleConfigMapFromFileSources(configMap, s.FileSources); err != nil {
 			return nil, err
@@ -193,19 +195,43 @@ func addKeyFromFileToConfigMap(configMap *api.ConfigMap, keyName, filePath strin
 	if err != nil {
 		return err
 	}
+
+	if binutil.IsBinaryData(data) == true {
+
+		err := validateConfigMap(configMap, keyName)
+		if err != nil {
+			return err
+		}
+		configMap.BinaryData[keyName] = data
+		return nil
+	}
+
 	return addKeyFromLiteralToConfigMap(configMap, keyName, string(data))
 }
 
 // addKeyFromLiteralToConfigMap adds the given key and data to the given config map,
 // returning an error if the key is not valid or if the key already exists.
 func addKeyFromLiteralToConfigMap(configMap *api.ConfigMap, keyName, data string) error {
+
+	err := validateConfigMap(configMap, keyName)
+	if err != nil {
+		return err
+	}
+	configMap.Data[keyName] = data
+	return nil
+}
+
+func validateConfigMap(configMap *api.ConfigMap, keyName string) error{
 	// Note, the rules for ConfigMap keys are the exact same as the ones for SecretKeys.
 	if errs := validation.IsConfigMapKey(keyName); len(errs) != 0 {
 		return fmt.Errorf("%q is not a valid key name for a ConfigMap: %s", keyName, strings.Join(errs, ";"))
 	}
-	if _, entryExists := configMap.Data[keyName]; entryExists {
-		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v.", keyName, configMap.Data)
+
+	_, dataEntryExists := configMap.Data[keyName];
+	_, binaryDataEntryExists := configMap.BinaryData[keyName];
+
+	if  dataEntryExists || binaryDataEntryExists {
+		return fmt.Errorf("cannot add key %s, another key by that name already exists: %v.", keyName, configMap)
 	}
-	configMap.Data[keyName] = data
 	return nil
 }
