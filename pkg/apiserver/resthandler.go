@@ -804,12 +804,17 @@ func DeleteResource(r rest.GracefulDeleter, checkBody bool, scope RequestScope, 
 		}
 		trace.Step("Object deleted from database")
 
+		statusCode := http.StatusOK
+		if *options.GracePeriodSeconds > 0 {
+			statusCode = http.StatusAccepted
+		}
+
 		// if the rest.Deleter returns a nil object, fill out a status. Callers may return a valid
 		// object with the response.
 		if result == nil {
 			result = &unversioned.Status{
 				Status: unversioned.StatusSuccess,
-				Code:   http.StatusOK,
+				Code:   int32(statusCode),
 				Details: &unversioned.StatusDetails{
 					Name: name,
 					Kind: scope.Kind.Kind,
@@ -824,7 +829,7 @@ func DeleteResource(r rest.GracefulDeleter, checkBody bool, scope RequestScope, 
 				}
 			}
 		}
-		write(http.StatusOK, scope.Kind.GroupVersion(), scope.Serializer, result, w, req.Request)
+		write(int(statusCode), scope.Kind.GroupVersion(), scope.Serializer, result, w, req.Request)
 	}
 }
 
@@ -909,12 +914,17 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope RequestSco
 			return
 		}
 
+		statusCode := http.StatusOK
+		if *options.GracePeriodSeconds > 0 {
+			statusCode = http.StatusAccepted
+		}
+
 		// if the rest.Deleter returns a nil object, fill out a status. Callers may return a valid
 		// object with the response.
 		if result == nil {
 			result = &unversioned.Status{
 				Status: unversioned.StatusSuccess,
-				Code:   http.StatusOK,
+				Code:   int32(statusCode),
 				Details: &unversioned.StatusDetails{
 					Kind: scope.Kind.Kind,
 				},
@@ -928,7 +938,7 @@ func DeleteCollection(r rest.CollectionDeleter, checkBody bool, scope RequestSco
 				}
 			}
 		}
-		writeNegotiated(scope.Serializer, scope.Kind.GroupVersion(), w, req.Request, http.StatusOK, result)
+		writeNegotiated(scope.Serializer, scope.Kind.GroupVersion(), w, req.Request, int(statusCode), result)
 	}
 }
 
