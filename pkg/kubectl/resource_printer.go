@@ -363,6 +363,7 @@ type PrintOptions struct {
 	AbsoluteTimestamps bool
 	Kind               string
 	ColumnLabels       []string
+	Since              int64
 }
 
 // HumanReadablePrinter is an implementation of ResourcePrinter which attempts to provide
@@ -399,6 +400,11 @@ func formatResourceName(kind, name string, withKind bool) string {
 // GetResourceKind returns the type currently set for a resource
 func (h *HumanReadablePrinter) GetResourceKind() string {
 	return h.options.Kind
+}
+
+// GetResourceKind returns the type currently set for a resource
+func (h *HumanReadablePrinter) SetSince(sec int64) {
+	h.options.Since = sec
 }
 
 // EnsurePrintWithKind sets HumanReadablePrinter options "WithKind" to true
@@ -1633,6 +1639,14 @@ func printEvent(event *api.Event, w io.Writer, options PrintOptions) error {
 	} else {
 		FirstTimestamp = translateTimestamp(event.FirstTimestamp)
 		LastTimestamp = translateTimestamp(event.LastTimestamp)
+	}
+
+	if options.Since > 0 {
+		lastTimestampDuration, _ := time.ParseDuration(LastTimestamp)
+		lastTimestampDurationSec := int64(lastTimestampDuration.Seconds())
+		if lastTimestampDurationSec > options.Since {
+			return nil
+		}
 	}
 
 	if _, err := fmt.Fprintf(

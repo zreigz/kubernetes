@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -32,6 +33,7 @@ import (
 	utilerrors "k8s.io/kubernetes/pkg/util/errors"
 	"k8s.io/kubernetes/pkg/util/interrupt"
 	"k8s.io/kubernetes/pkg/watch"
+	"math"
 )
 
 // GetOptions is the start of the data required to perform the operation.  As new fields are added, add them here instead of
@@ -78,6 +80,7 @@ var (
 
 		# List one or more resources by their type and names.
 		kubectl get rc/web service/frontend pods/web-pod-13je7`)
+	sinceSec = int64(0)
 )
 
 // NewCmdGet creates a command object for the generic "get" action, which
@@ -117,6 +120,7 @@ func NewCmdGet(f cmdutil.Factory, out io.Writer, errOut io.Writer) *cobra.Comman
 	cmd.Flags().Bool("all-namespaces", false, "If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
 	cmd.Flags().StringSliceP("label-columns", "L", []string{}, "Accepts a comma separated list of labels that are going to be presented as columns. Names are case-sensitive. You can also use multiple flag options like -L label1 -L label2...")
 	cmd.Flags().Bool("export", false, "If true, use 'export' for the resources.  Exported resources are stripped of cluster-specific information.")
+	cmd.Flags().Duration("since", 0, "This flag is dedicated for events. Only return events newer than a relative duration like 5s, 2m, or 3h. Defaults to all events.")
 	usage := "identifying the resource to get from a server."
 	cmdutil.AddFilenameOptionFlags(cmd, &options.FilenameOptions, usage)
 	cmdutil.AddInclude3rdPartyFlags(cmd)
@@ -282,6 +286,11 @@ func RunGet(f cmdutil.Factory, out, errOut io.Writer, cmd *cobra.Command, args [
 			return err
 		})
 		return nil
+	}
+
+	if sinceSeconds := cmdutil.GetFlagDuration(cmd, "since"); sinceSeconds != 0 {
+		// round up to the nearest second
+		sinceSec = int64(math.Ceil(float64(sinceSeconds) / float64(time.Second)))
 	}
 
 	r := resource.NewBuilder(mapper, typer, resource.ClientMapperFunc(f.UnstructuredClientForMapping), runtime.UnstructuredJSONScheme).
@@ -484,6 +493,10 @@ func RunGet(f cmdutil.Factory, out, errOut io.Writer, cmd *cobra.Command, args [
 
 			if showKind {
 				resourcePrinter.EnsurePrintWithKind(resourceName)
+			}
+
+			if sinceSec > 0 {
+				resourcePrinter.SetSince(sinceSec)
 			}
 
 			if err := printer.PrintObj(original, w); err != nil {
