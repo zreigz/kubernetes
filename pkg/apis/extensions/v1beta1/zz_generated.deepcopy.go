@@ -992,6 +992,20 @@ func DeepCopy_v1beta1_ThirdPartyResource(in interface{}, out interface{}, c *con
 			*out = make([]APIVersion, len(*in))
 			copy(*out, *in)
 		}
+		if in.Display != nil {
+			in, out := &in.Display, &out.Display
+			*out = make(map[string]string)
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
+		if in.WideDisplay != nil {
+			in, out := &in.WideDisplay, &out.WideDisplay
+			*out = make(map[string]string)
+			for key, val := range *in {
+				(*out)[key] = val
+			}
+		}
 		return nil
 	}
 }

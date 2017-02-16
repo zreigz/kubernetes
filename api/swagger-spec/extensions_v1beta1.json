@@ -9553,6 +9553,12 @@
        "$ref": "v1beta1.APIVersion"
       },
       "description": "Versions are versions for this third party object"
+     },
+     "display": {
+      "type": "object"
+     },
+     "wideDisplay": {
+      "type": "object"
      }
     }
    },

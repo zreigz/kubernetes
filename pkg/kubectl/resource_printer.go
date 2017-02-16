@@ -463,8 +463,7 @@ func (h *HumanReadablePrinter) validatePrintHandlerFunc(printFunc reflect.Value)
 	if funcType.In(1) != reflect.TypeOf((*io.Writer)(nil)).Elem() ||
 		funcType.In(2) != reflect.TypeOf((*PrintOptions)(nil)).Elem() ||
 		funcType.Out(0) != reflect.TypeOf((*error)(nil)).Elem() {
-		return fmt.Errorf("invalid print handler. The expected signature is: "+
-			"func handler(obj %v, w io.Writer, options PrintOptions) error", funcType.In(0))
+		return fmt.Errorf("invalid print handler. The expected signature is: "+"func handler(obj %v, w io.Writer, options PrintOptions) error", funcType.In(0))
 	}
 	return nil
 }
@@ -1142,7 +1141,7 @@ func loadBalancerStatusStringer(s api.LoadBalancerStatus, wide bool) string {
 	}
 	r := strings.Join(result, ",")
 	if !wide && len(r) > loadBalancerWidth {
-		r = r[0:(loadBalancerWidth-3)] + "..."
+		r = r[0:(loadBalancerWidth - 3)] + "..."
 	}
 	return r
 }
@@ -2492,23 +2491,46 @@ func (h *HumanReadablePrinter) PrintObj(obj runtime.Object, output io.Writer) er
 	}
 
 	if _, err := meta.Accessor(obj); err == nil {
+		// we don't recognize this type, but we can still attempt to print some reasonable information about.
+		unstructured, ok := obj.(runtime.Unstructured)
+		if !ok {
+			return fmt.Errorf("error: unknown type %#v", obj)
+		}
 		if !h.options.NoHeaders && t != h.lastType {
 			headers := []string{"NAME", "KIND"}
+
 			headers = append(headers, formatLabelHeaders(h.options.ColumnLabels)...)
 			// LABELS is always the last column.
 			headers = append(headers, formatShowLabelsHeader(h.options.ShowLabels, t)...)
 			if h.options.WithNamespace {
 				headers = append(withNamespacePrefixColumns, headers...)
 			}
+			content := unstructured.UnstructuredContent()
+			displayMap := getDataToDisplay(content, "display")
+			keys := []string{}
+			for k, _ := range displayMap {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				headers = append(headers, k)
+			}
+
+			if h.options.Wide {
+				keys := []string{}
+				wideDisplayMap := getDataToDisplay(content, "wideDisplay")
+				for k, _ := range wideDisplayMap {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				for _, k := range keys {
+					headers = append(headers, k)
+				}
+			}
 			h.printHeader(headers, w)
 			h.lastType = t
 		}
 
-		// we don't recognize this type, but we can still attempt to print some reasonable information about.
-		unstructured, ok := obj.(runtime.Unstructured)
-		if !ok {
-			return fmt.Errorf("error: unknown type %#v", obj)
-		}
 		// if the error isn't nil, report the "I don't recognize this" error
 		if err := printUnstructured(unstructured, w, h.options); err != nil {
 			return err
@@ -2550,7 +2572,38 @@ func printUnstructured(unstructured runtime.Unstructured, w io.Writer, options P
 	}
 	name := formatResourceName(options.Kind, metadata.GetName(), options.WithKind)
 
-	if _, err := fmt.Fprintf(w, "%s\t%s", name, kind); err != nil {
+	display := ""
+	keys := []string{}
+	displayMap := getDataToDisplay(content, "display")
+	for k, _ := range displayMap {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		if len(display) > 0 {
+			display = fmt.Sprintf("%s\t%s", display, getDisplayContent(content, displayMap[key]))
+		} else {
+			display = getDisplayContent(content, displayMap[key])
+		}
+
+	}
+	if options.Wide {
+		keys := []string{}
+		wideDisplayMap := getDataToDisplay(content, "wideDisplay")
+		for k, _ := range wideDisplayMap {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			if len(display) > 0 {
+				display = fmt.Sprintf("%s\t%s", display, getDisplayContent(content, wideDisplayMap[key]))
+			} else {
+				display = getDisplayContent(content, wideDisplayMap[key])
+			}
+		}
+	}
+
+	if _, err := fmt.Fprintf(w, "%s\t%s\t%s", name, kind, display); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprint(w, AppendLabels(metadata.GetLabels(), options.ColumnLabels)); err != nil {
@@ -2561,6 +2614,33 @@ func printUnstructured(unstructured runtime.Unstructured, w io.Writer, options P
 	}
 
 	return nil
+}
+
+func getDataToDisplay(content map[string]interface{}, searchFor string) map[string]string {
+
+	displayMap := map[string]string{}
+	if objDisplay, ok := content[searchFor]; ok {
+		if mapObj, ok := objDisplay.(map[string]string); ok {
+			displayMap = mapObj
+		}
+	}
+	return displayMap
+}
+
+func getDisplayContent(content map[string]interface{}, path string) string {
+	pathList := strings.Split(path, ".")
+	displayMap := content
+
+	for _, item := range pathList {
+		if objContent, ok := displayMap[item]; ok {
+			if mapObj, ok := objContent.(map[string]interface{}); ok {
+				displayMap = mapObj
+			} else if stringObj, ok := objContent.(string); ok {
+				return stringObj
+			}
+		}
+	}
+	return ""
 }
 
 // TemplatePrinter is an implementation of ResourcePrinter which formats data with a Go Template.

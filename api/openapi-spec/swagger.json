@@ -42163,6 +42163,12 @@
       "description": "Description is the description of this object.",
       "type": "string"
      },
+     "display": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
+      }
+     },
      "kind": {
       "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: http://releases.k8s.io/HEAD/docs/devel/api-conventions.md#types-kinds",
       "type": "string"
@@ -42176,6 +42182,12 @@
       "type": "array",
       "items": {
        "$ref": "#/definitions/io.k8s.kubernetes.pkg.apis.extensions.v1beta1.APIVersion"
+      }
+     },
+     "wideDisplay": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "string"
       }
      }
     },

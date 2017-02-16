@@ -115,6 +115,10 @@ type ThirdPartyResource struct {
 	// Versions are versions for this third party object
 	// +optional
 	Versions []APIVersion `json:"versions,omitempty" protobuf:"bytes,3,rep,name=versions"`
+
+	Display map[string]string `json:"display,omitempty" protobuf:"bytes,4,rep,name=display"`
+
+	WideDisplay map[string]string `json:"wideDisplay,omitempty" protobuf:"bytes,5,rep,name=wideDisplay"`
 }
 
 // ThirdPartyResourceList is a list of ThirdPartyResources.

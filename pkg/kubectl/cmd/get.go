@@ -19,11 +19,11 @@ package cmd
 import (
 	"fmt"
 	"io"
-
 	"github.com/spf13/cobra"
 
 	"github.com/golang/glog"
 	"k8s.io/apimachinery/pkg/api/meta"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
@@ -35,6 +35,8 @@ import (
 	"k8s.io/kubernetes/pkg/kubectl/resource"
 	"k8s.io/kubernetes/pkg/util/i18n"
 	"k8s.io/kubernetes/pkg/util/interrupt"
+	"reflect"
+	"strings"
 )
 
 // GetOptions is the start of the data required to perform the operation.  As new fields are added, add them here instead of
@@ -492,6 +494,32 @@ func RunGet(f cmdutil.Factory, out, errOut io.Writer, cmd *cobra.Command, args [
 
 			if showKind {
 				resourcePrinter.EnsurePrintWithKind(resourceName)
+			}
+
+			t := reflect.TypeOf(decodedObj)
+			if t.String() == "*unstructured.Unstructured" {
+				kind := decodedObj.GetObjectKind()
+				gvk := kind.GroupVersionKind()
+				tprName := fmt.Sprintf("%s.%s", gvk.Kind, gvk.Group)
+				tprName = strings.ToLower(tprName)
+				client, _ := f.ClientSet()
+				tprObj, err := client.Extensions().ThirdPartyResources().Get(tprName, v1.GetOptions{ResourceVersion: gvk.Version})
+
+				if err == nil {
+
+					unstructured, ok := decodedObj.(runtime.Unstructured)
+					if ok {
+						content := unstructured.UnstructuredContent()
+
+						if len(tprObj.Display) > 0 {
+							content["display"] = tprObj.Display
+						}
+
+						if len(tprObj.WideDisplay) > 0 {
+							content["wideDisplay"] = tprObj.WideDisplay
+						}
+					}
+				}
 			}
 
 			if err := printer.PrintObj(decodedObj, w); err != nil {

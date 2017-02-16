@@ -125,6 +125,10 @@ type ThirdPartyResource struct {
 
 	// Versions are versions for this third party object
 	Versions []APIVersion
+
+	Display map[string]string
+
+	WideDisplay map[string]string
 }
 
 type ThirdPartyResourceList struct {

@@ -902,6 +902,10 @@ message ThirdPartyResource {
   // Versions are versions for this third party object
   // +optional
   repeated APIVersion versions = 3;
+
+  map<string, string> display = 4;
+
+  map<string, string> wideDisplay = 5;
 }
 
 // An internal object, used for versioned storage in etcd.  Not exposed to the end user.

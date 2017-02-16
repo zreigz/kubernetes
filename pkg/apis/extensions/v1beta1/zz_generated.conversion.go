@@ -1455,6 +1455,8 @@ func autoConvert_v1beta1_ThirdPartyResource_To_extensions_ThirdPartyResource(in 
 	out.ObjectMeta = in.ObjectMeta
 	out.Description = in.Description
 	out.Versions = *(*[]extensions.APIVersion)(unsafe.Pointer(&in.Versions))
+	out.Display = *(*map[string]string)(unsafe.Pointer(&in.Display))
+	out.WideDisplay = *(*map[string]string)(unsafe.Pointer(&in.WideDisplay))
 	return nil
 }
 
@@ -1466,6 +1468,8 @@ func autoConvert_extensions_ThirdPartyResource_To_v1beta1_ThirdPartyResource(in 
 	out.ObjectMeta = in.ObjectMeta
 	out.Description = in.Description
 	out.Versions = *(*[]APIVersion)(unsafe.Pointer(&in.Versions))
+	out.Display = *(*map[string]string)(unsafe.Pointer(&in.Display))
+	out.WideDisplay = *(*map[string]string)(unsafe.Pointer(&in.WideDisplay))
 	return nil
 }
 
